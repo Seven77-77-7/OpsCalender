@@ -3,12 +3,15 @@ const SHEET_NAME = "网页维护表";
 const RANGE = "A1:R220";
 const PUBLISHED_LINK_PREFIX = "xpin-published-link:";
 const START_DATE = "2026-07-01";
+const END_DATE = "2027-02-20";
 
 let allRows = [];
 let filteredRows = [];
 let selectedDate = "";
 let selectedEvent = null;
 let currentMonth = "2026-07";
+let rangeStart = "";
+let rangeEnd = "";
 
 const els = {
   status: document.querySelector("#dataStatus"),
@@ -18,7 +21,8 @@ const els = {
   calendarTitle: document.querySelector("#calendarTitle"),
   selectedDateTitle: document.querySelector("#selectedDateTitle"),
   eventList: document.querySelector("#eventList"),
-  dateFilter: document.querySelector("#dateFilter"),
+  startDateFilter: document.querySelector("#startDateFilter"),
+  endDateFilter: document.querySelector("#endDateFilter"),
   clearDateFilter: document.querySelector("#clearDateFilter"),
   weekRangeTitle: document.querySelector("#weekRangeTitle"),
   weekImpressions: document.querySelector("#weekImpressions"),
@@ -139,21 +143,29 @@ function toDateKey(date) {
   return `${year}-${month}-${day}`;
 }
 
-function addDays(date, days) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
+function getActiveRange() {
+  if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
+    return { start: rangeEnd, end: rangeStart };
+  }
+  return {
+    start: rangeStart || START_DATE,
+    end: rangeEnd || END_DATE,
+  };
 }
 
-function getWeekRange(dateKey) {
-  const base = new Date(`${dateKey || currentMonth + "-01"}T00:00:00`);
-  const day = base.getDay() === 0 ? 7 : base.getDay();
-  const start = addDays(base, 1 - day);
-  const end = addDays(start, 6);
-  return {
-    start: toDateKey(start),
-    end: toDateKey(end),
-  };
+function isInActiveRange(item) {
+  const range = getActiveRange();
+  const date = item?.["日期"] || "";
+  return date >= range.start && date <= range.end;
+}
+
+function rangeLabel(start, end) {
+  const hasStart = Boolean(rangeStart);
+  const hasEnd = Boolean(rangeEnd);
+  if (hasStart && hasEnd) return `${formatDate(start)} - ${formatDate(end)}`;
+  if (hasStart) return `${formatDate(start)} 之后`;
+  if (hasEnd) return `${formatDate(end)} 之前`;
+  return "全部已展示周期";
 }
 
 function formatNumber(value) {
@@ -277,9 +289,9 @@ function metricsBlock(item) {
   `;
 }
 
-function renderWeeklySummary() {
-  const range = getWeekRange(selectedDate || `${currentMonth}-01`);
-  const rows = allRows.filter((item) => item["日期"] >= range.start && item["日期"] <= range.end);
+function renderRangeSummary() {
+  const range = getActiveRange();
+  const rows = allRows.filter(isInActiveRange);
   const totals = rows.reduce(
     (sum, item) => {
       sum.impressions += metricValue(item, "Twitter阅读量");
@@ -290,23 +302,30 @@ function renderWeeklySummary() {
     { impressions: 0, likes: 0, replies: 0 },
   );
 
-  els.weekRangeTitle.textContent = `${formatDate(range.start)} - ${formatDate(range.end)}`;
+  els.weekRangeTitle.textContent = rangeLabel(range.start, range.end);
   els.weekImpressions.textContent = formatNumber(totals.impressions);
   els.weekLikes.textContent = formatNumber(totals.likes);
   els.weekReplies.textContent = formatNumber(totals.replies);
 }
 
 function applyFilters() {
-  filteredRows = allRows.filter((item) => eventMonth(item) === currentMonth);
+  filteredRows = allRows.filter(isInActiveRange);
+  const monthHasVisibleRows = filteredRows.some((item) => eventMonth(item) === currentMonth);
+  if (!monthHasVisibleRows) {
+    currentMonth = filteredRows[0]?.["日期"]?.slice(0, 7) || currentMonth;
+  }
 
   if (!selectedDate || !filteredRows.some((item) => item["日期"] === selectedDate)) {
-    selectedDate = filteredRows[0]?.["日期"] || "";
+    selectedDate =
+      filteredRows.find((item) => eventMonth(item) === currentMonth)?.["日期"] ||
+      filteredRows[0]?.["日期"] ||
+      "";
     selectedEvent = filteredRows.find((item) => item["日期"] === selectedDate) || null;
   }
 
   renderCalendar();
   renderEventList();
-  renderWeeklySummary();
+  renderRangeSummary();
 }
 
 function currentMonthIndex() {
@@ -327,7 +346,6 @@ function switchMonth(direction) {
   const monthRows = allRows.filter((item) => eventMonth(item) === currentMonth);
   selectedDate = monthRows[0]?.["日期"] || "";
   selectedEvent = monthRows[0] || null;
-  if (els.dateFilter) els.dateFilter.value = selectedDate;
   applyFilters();
 }
 
@@ -387,15 +405,17 @@ function renderCalendar() {
 }
 
 function renderEventList() {
-  const events = filteredRows.filter((item) => item["日期"] === selectedDate);
-  els.selectedDateTitle.textContent = selectedDate ? `${formatDate(selectedDate)} · ${events.length} 个动作` : "选择一个日期";
+  const events = displayedEvents();
+  els.selectedDateTitle.textContent = selectedDate
+    ? `${formatDate(selectedDate)} · ${events.length} 个动作`
+    : `筛选范围 · ${events.length} 个动作`;
 
   if (!events.length) {
-    els.eventList.innerHTML = '<div class="empty-state">这个日期没有活动。</div>';
+    els.eventList.innerHTML = '<div class="empty-state">这个筛选范围内没有活动。</div>';
     return;
   }
 
-  if (!selectedEvent || selectedEvent["日期"] !== selectedDate) selectedEvent = events[0];
+  if (selectedDate && (!selectedEvent || selectedEvent["日期"] !== selectedDate)) selectedEvent = events[0];
 
   els.eventList.innerHTML = events
     .map((item, index) => {
@@ -457,41 +477,53 @@ function renderEventList() {
     .join("");
 }
 
+function displayedEvents() {
+  return filteredRows.filter((item) => {
+    if (selectedDate) return item["日期"] === selectedDate;
+    return true;
+  });
+}
+
 function bindEvents() {
   els.prevMonth.addEventListener("click", () => switchMonth(-1));
   els.nextMonth.addEventListener("click", () => switchMonth(1));
-  els.dateFilter.addEventListener("change", () => {
-    const date = els.dateFilter.value;
-    if (!date) return;
-    currentMonth = date.slice(0, 7);
-    selectedDate = date;
-    selectedEvent = allRows.find((item) => item["日期"] === selectedDate) || null;
-    applyFilters();
+  [els.startDateFilter, els.endDateFilter].forEach((input) => {
+    input.addEventListener("change", () => {
+      rangeStart = els.startDateFilter.value;
+      rangeEnd = els.endDateFilter.value;
+      const range = getActiveRange();
+      currentMonth = range.start.slice(0, 7);
+      selectedDate = "";
+      selectedEvent = null;
+      applyFilters();
+    });
   });
   els.clearDateFilter.addEventListener("click", () => {
-    els.dateFilter.value = "";
-    selectedDate = filteredRows[0]?.["日期"] || "";
-    selectedEvent = filteredRows.find((item) => item["日期"] === selectedDate) || null;
-    renderCalendar();
-    renderEventList();
-    renderWeeklySummary();
+    els.startDateFilter.value = "";
+    els.endDateFilter.value = "";
+    rangeStart = "";
+    rangeEnd = "";
+    selectedDate = "";
+    selectedEvent = null;
+    applyFilters();
   });
 
   els.calendar.addEventListener("click", (event) => {
     const button = event.target.closest(".day[data-date]");
     if (!button) return;
     selectedDate = button.dataset.date;
-    if (els.dateFilter) els.dateFilter.value = selectedDate;
+    rangeStart = selectedDate;
+    rangeEnd = selectedDate;
+    if (els.startDateFilter) els.startDateFilter.value = selectedDate;
+    if (els.endDateFilter) els.endDateFilter.value = selectedDate;
     selectedEvent = filteredRows.find((item) => item["日期"] === selectedDate) || null;
-    renderCalendar();
-    renderEventList();
-    renderWeeklySummary();
+    applyFilters();
   });
 
   els.eventList.addEventListener("click", (event) => {
     const saveButton = event.target.closest("[data-save-link]");
     if (saveButton) {
-      const events = filteredRows.filter((item) => item["日期"] === selectedDate);
+      const events = displayedEvents();
       const item = events[Number(saveButton.dataset.saveLink)];
       const input = els.eventList.querySelector(`[data-published-input="${saveButton.dataset.saveLink}"]`);
       if (!item || !input) return;
@@ -508,7 +540,7 @@ function bindEvents() {
 
     const card = event.target.closest(".event-card[data-event-index]");
     if (!card) return;
-    const events = filteredRows.filter((item) => item["日期"] === selectedDate);
+    const events = displayedEvents();
     selectedEvent = events[Number(card.dataset.eventIndex)];
     renderEventList();
   });
@@ -519,7 +551,6 @@ async function init() {
   const firstMonthWithData = monthLabels.find(([value]) => allRows.some((item) => eventMonth(item) === value))?.[0];
   currentMonth = firstMonthWithData || currentMonth;
   selectedDate = allRows.find((item) => eventMonth(item) === currentMonth)?.["日期"] || "";
-  if (els.dateFilter) els.dateFilter.value = selectedDate;
   selectedEvent = allRows.find((item) => item["日期"] === selectedDate) || null;
   bindEvents();
   applyFilters();

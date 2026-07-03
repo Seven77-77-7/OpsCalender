@@ -145,7 +145,7 @@ h3 {
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(220px, 320px) auto;
+  grid-template-columns: minmax(180px, 260px) minmax(180px, 260px) auto;
   gap: 12px;
   align-items: end;
   padding: 14px 18px;

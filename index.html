@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>XPIN市场运营日历</title>
-    <link rel="stylesheet" href="./styles.css?v=10" />
+    <link rel="stylesheet" href="./styles.css?v=12" />
   </head>
   <body>
     <header class="topbar">
@@ -16,10 +16,10 @@
     </header>
 
     <main class="workspace">
-      <section class="weekly-summary" aria-label="当周数据总览">
+      <section class="weekly-summary" aria-label="筛选范围数据总览">
         <div>
-          <p class="kicker">WEEKLY DATA</p>
-          <h2 id="weekRangeTitle">当周数据总览</h2>
+          <p class="kicker">RANGE DATA</p>
+          <h2 id="weekRangeTitle">筛选范围数据总览</h2>
         </div>
         <div class="metric-grid">
           <div class="metric-card">
@@ -39,10 +39,14 @@
 
       <section class="filters" aria-label="日历筛选">
         <label>
-          日期筛选
-          <input id="dateFilter" type="date" min="2026-07-01" max="2027-02-20" />
+          开始日期
+          <input id="startDateFilter" type="date" min="2026-07-01" max="2027-02-20" />
         </label>
-        <button id="clearDateFilter" type="button">清除日期</button>
+        <label>
+          结束日期
+          <input id="endDateFilter" type="date" min="2026-07-01" max="2027-02-20" />
+        </label>
+        <button id="clearDateFilter" type="button">清除筛选</button>
       </section>
 
       <section class="main-grid">
@@ -73,8 +77,8 @@
 
     </main>
 
-    <script src="./data.js?v=11" defer></script>
-    <script src="./sync-config.js?v=11" defer></script>
-    <script src="./app.js?v=11" defer></script>
+    <script src="./data.js?v=12" defer></script>
+    <script src="./sync-config.js?v=12" defer></script>
+    <script src="./app.js?v=12" defer></script>
   </body>
 </html>
