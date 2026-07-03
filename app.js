@@ -1,6 +1,6 @@
 const SHEET_ID = "1qcPhG5dCh-BS7NUsn15HIHxsMFGBt13PJleD9Y-bsR4";
 const SHEET_NAME = "网页维护表";
-const RANGE = "A1:O200";
+const RANGE = "A1:R220";
 const PUBLISHED_LINK_PREFIX = "xpin-published-link:";
 const START_DATE = "2026-07-01";
 
@@ -18,6 +18,12 @@ const els = {
   calendarTitle: document.querySelector("#calendarTitle"),
   selectedDateTitle: document.querySelector("#selectedDateTitle"),
   eventList: document.querySelector("#eventList"),
+  dateFilter: document.querySelector("#dateFilter"),
+  clearDateFilter: document.querySelector("#clearDateFilter"),
+  weekRangeTitle: document.querySelector("#weekRangeTitle"),
+  weekImpressions: document.querySelector("#weekImpressions"),
+  weekLikes: document.querySelector("#weekLikes"),
+  weekReplies: document.querySelector("#weekReplies"),
 };
 
 const monthLabels = [
@@ -126,6 +132,45 @@ function formatDate(date) {
   return `${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
+function toDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function getWeekRange(dateKey) {
+  const base = new Date(`${dateKey || currentMonth + "-01"}T00:00:00`);
+  const day = base.getDay() === 0 ? 7 : base.getDay();
+  const start = addDays(base, 1 - day);
+  const end = addDays(start, 6);
+  return {
+    start: toDateKey(start),
+    end: toDateKey(end),
+  };
+}
+
+function formatNumber(value) {
+  const number = Number(String(value || "").replace(/,/g, ""));
+  if (!Number.isFinite(number) || number <= 0) return "0";
+  return new Intl.NumberFormat("en-US").format(number);
+}
+
+function metricValue(item, key) {
+  const value = Number(String(item?.[key] || "").replace(/,/g, ""));
+  return Number.isFinite(value) ? value : 0;
+}
+
+function hasMetrics(item) {
+  return ["Twitter阅读量", "点赞量", "回复互动量"].some((key) => String(item?.[key] || "").trim() !== "");
+}
+
 function eventKey(item) {
   if (!item) return "";
   return [item["日期"], item["活动名称"], item["渠道"]].join("|");
@@ -211,6 +256,46 @@ function productDetails(item) {
   `;
 }
 
+function metricsBlock(item) {
+  if (!hasMetrics(item)) {
+    return `
+      <div class="event-section metric-section">
+        <h4>发布数据</h4>
+        <p class="muted">暂未记录。推文发布超过 24 小时后自动写入一次。</p>
+      </div>
+    `;
+  }
+  return `
+    <div class="event-section metric-section">
+      <h4>发布数据</h4>
+      <div class="event-metrics">
+        <span><em>阅读</em><strong>${formatNumber(item["Twitter阅读量"])}</strong></span>
+        <span><em>点赞</em><strong>${formatNumber(item["点赞量"])}</strong></span>
+        <span><em>回复</em><strong>${formatNumber(item["回复互动量"])}</strong></span>
+      </div>
+    </div>
+  `;
+}
+
+function renderWeeklySummary() {
+  const range = getWeekRange(selectedDate || `${currentMonth}-01`);
+  const rows = allRows.filter((item) => item["日期"] >= range.start && item["日期"] <= range.end);
+  const totals = rows.reduce(
+    (sum, item) => {
+      sum.impressions += metricValue(item, "Twitter阅读量");
+      sum.likes += metricValue(item, "点赞量");
+      sum.replies += metricValue(item, "回复互动量");
+      return sum;
+    },
+    { impressions: 0, likes: 0, replies: 0 },
+  );
+
+  els.weekRangeTitle.textContent = `${formatDate(range.start)} - ${formatDate(range.end)}`;
+  els.weekImpressions.textContent = formatNumber(totals.impressions);
+  els.weekLikes.textContent = formatNumber(totals.likes);
+  els.weekReplies.textContent = formatNumber(totals.replies);
+}
+
 function applyFilters() {
   filteredRows = allRows.filter((item) => eventMonth(item) === currentMonth);
 
@@ -221,6 +306,7 @@ function applyFilters() {
 
   renderCalendar();
   renderEventList();
+  renderWeeklySummary();
 }
 
 function currentMonthIndex() {
@@ -241,6 +327,7 @@ function switchMonth(direction) {
   const monthRows = allRows.filter((item) => eventMonth(item) === currentMonth);
   selectedDate = monthRows[0]?.["日期"] || "";
   selectedEvent = monthRows[0] || null;
+  if (els.dateFilter) els.dateFilter.value = selectedDate;
   applyFilters();
 }
 
@@ -349,6 +436,7 @@ function renderEventList() {
             <span>划线 $${escapeHtml(item["划线价"])}</span>
           </div>
           ${productDetails(item)}
+          ${metricsBlock(item)}
         </article>
         <div class="event-link-editor${active}" data-link-index="${index}">
           <label>
@@ -372,14 +460,32 @@ function renderEventList() {
 function bindEvents() {
   els.prevMonth.addEventListener("click", () => switchMonth(-1));
   els.nextMonth.addEventListener("click", () => switchMonth(1));
+  els.dateFilter.addEventListener("change", () => {
+    const date = els.dateFilter.value;
+    if (!date) return;
+    currentMonth = date.slice(0, 7);
+    selectedDate = date;
+    selectedEvent = allRows.find((item) => item["日期"] === selectedDate) || null;
+    applyFilters();
+  });
+  els.clearDateFilter.addEventListener("click", () => {
+    els.dateFilter.value = "";
+    selectedDate = filteredRows[0]?.["日期"] || "";
+    selectedEvent = filteredRows.find((item) => item["日期"] === selectedDate) || null;
+    renderCalendar();
+    renderEventList();
+    renderWeeklySummary();
+  });
 
   els.calendar.addEventListener("click", (event) => {
     const button = event.target.closest(".day[data-date]");
     if (!button) return;
     selectedDate = button.dataset.date;
+    if (els.dateFilter) els.dateFilter.value = selectedDate;
     selectedEvent = filteredRows.find((item) => item["日期"] === selectedDate) || null;
     renderCalendar();
     renderEventList();
+    renderWeeklySummary();
   });
 
   els.eventList.addEventListener("click", (event) => {
@@ -413,6 +519,7 @@ async function init() {
   const firstMonthWithData = monthLabels.find(([value]) => allRows.some((item) => eventMonth(item) === value))?.[0];
   currentMonth = firstMonthWithData || currentMonth;
   selectedDate = allRows.find((item) => eventMonth(item) === currentMonth)?.["日期"] || "";
+  if (els.dateFilter) els.dateFilter.value = selectedDate;
   selectedEvent = allRows.find((item) => item["日期"] === selectedDate) || null;
   bindEvents();
   applyFilters();

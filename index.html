@@ -16,6 +16,35 @@
     </header>
 
     <main class="workspace">
+      <section class="weekly-summary" aria-label="当周数据总览">
+        <div>
+          <p class="kicker">WEEKLY DATA</p>
+          <h2 id="weekRangeTitle">当周数据总览</h2>
+        </div>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <span>Twitter阅读量</span>
+            <strong id="weekImpressions">0</strong>
+          </div>
+          <div class="metric-card">
+            <span>点赞量</span>
+            <strong id="weekLikes">0</strong>
+          </div>
+          <div class="metric-card">
+            <span>回复互动量</span>
+            <strong id="weekReplies">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="filters" aria-label="日历筛选">
+        <label>
+          日期筛选
+          <input id="dateFilter" type="date" min="2026-07-01" max="2027-02-20" />
+        </label>
+        <button id="clearDateFilter" type="button">清除日期</button>
+      </section>
+
       <section class="main-grid">
         <div class="calendar-panel">
           <div class="panel-head">
@@ -44,8 +73,8 @@
 
     </main>
 
-    <script src="./data.js?v=10" defer></script>
-    <script src="./sync-config.js?v=10" defer></script>
-    <script src="./app.js?v=10" defer></script>
+    <script src="./data.js?v=11" defer></script>
+    <script src="./sync-config.js?v=11" defer></script>
+    <script src="./app.js?v=11" defer></script>
   </body>
 </html>
