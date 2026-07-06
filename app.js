@@ -512,10 +512,6 @@ function bindEvents() {
     const button = event.target.closest(".day[data-date]");
     if (!button) return;
     selectedDate = button.dataset.date;
-    rangeStart = selectedDate;
-    rangeEnd = selectedDate;
-    if (els.startDateFilter) els.startDateFilter.value = selectedDate;
-    if (els.endDateFilter) els.endDateFilter.value = selectedDate;
     selectedEvent = filteredRows.find((item) => item["日期"] === selectedDate) || null;
     applyFilters();
   });
