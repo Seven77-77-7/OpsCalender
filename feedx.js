@@ -38,8 +38,8 @@ function renderMetrics(report) {
       <strong class="metric-text">${escapeHtml(categoryText)}</strong>
     </div>
     <div class="metric-card">
-      <span>错误账号</span>
-      <strong>${report.stats.errorCount}</strong>
+      <span>数据源</span>
+      <strong class="metric-text">FeedX JSON</strong>
     </div>
   `;
 }
@@ -128,15 +128,6 @@ function renderDetail() {
       <ol class="takeaway-list">
         ${report.takeaways.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
       </ol>
-    </section>
-    <section class="feedx-section">
-      <div class="panel-head compact">
-        <div>
-          <p class="kicker">ACCOUNT / API ERRORS</p>
-          <h2>拉取错误</h2>
-        </div>
-      </div>
-      <p class="muted">${report.errors.map(escapeHtml).join("；")}</p>
     </section>
   `;
 }
