@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FeedX 日报｜XPIN市场运营日历</title>
+    <link rel="stylesheet" href="./styles.css?v=13" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="kicker">FEEDX DAILY INTELLIGENCE</p>
+        <h1>FeedX 日报</h1>
+      </div>
+      <div class="topbar-actions">
+        <a class="nav-link" href="./index.html">返回运营日历</a>
+        <div class="status" id="feedxStatus">正在读取日报</div>
+      </div>
+    </header>
+
+    <main class="workspace feedx-workspace">
+      <section class="weekly-summary feedx-hero" aria-label="日报概览">
+        <div>
+          <p class="kicker">LATEST BRIEF</p>
+          <h2 id="feedxTitle">FeedX 今日内容</h2>
+          <p class="feedx-subtitle" id="feedxSubtitle"></p>
+        </div>
+        <div class="metric-grid" id="feedxMetrics"></div>
+      </section>
+
+      <section class="main-grid feedx-layout">
+        <aside class="calendar-panel feedx-sidebar">
+          <div class="panel-head compact">
+            <div>
+              <p class="kicker">ARCHIVE</p>
+              <h2>日报归档</h2>
+            </div>
+          </div>
+          <div class="feedx-report-list" id="feedxReportList"></div>
+        </aside>
+
+        <section class="detail-panel feedx-detail" id="feedxDetail" aria-live="polite"></section>
+      </section>
+    </main>
+
+    <script src="./feedx-data.js?v=1" defer></script>
+    <script src="./feedx.js?v=1" defer></script>
+  </body>
+</html>

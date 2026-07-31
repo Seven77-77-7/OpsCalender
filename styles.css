@@ -89,10 +89,163 @@ h3 {
   font-size: 13px;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  border-color: #9aa7b6;
+}
+
 .workspace {
   display: grid;
   gap: 18px;
   padding: 24px 32px 44px;
+}
+
+.feedx-workspace {
+  gap: 18px;
+}
+
+.feedx-hero {
+  align-items: start;
+}
+
+.feedx-subtitle {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.metric-card .metric-text {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.feedx-layout {
+  grid-template-columns: minmax(220px, 0.28fr) minmax(0, 0.72fr);
+}
+
+.feedx-sidebar {
+  position: sticky;
+  top: 106px;
+}
+
+.feedx-report-list {
+  display: grid;
+  gap: 8px;
+}
+
+.feedx-report-button {
+  display: grid;
+  gap: 4px;
+  min-height: 62px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.feedx-report-button.active {
+  border-color: #667085;
+  box-shadow: 0 0 0 2px rgba(102, 112, 133, 0.12);
+}
+
+.feedx-report-button span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.feedx-detail {
+  display: grid;
+  gap: 14px;
+}
+
+.feedx-summary-card,
+.feedx-section,
+.feedx-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.feedx-summary-card,
+.feedx-section {
+  padding: 16px;
+}
+
+.feedx-summary-card h2 {
+  margin-top: 12px;
+}
+
+.feedx-summary-card p,
+.feedx-card p,
+.takeaway-list {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.feedx-card-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.feedx-card {
+  padding: 13px;
+}
+
+.priority-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eef2f6;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.priority-pill.high {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.priority-pill.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.priority-pill.low {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.takeaway-list {
+  padding-left: 20px;
+}
+
+.takeaway-list li + li {
+  margin-top: 6px;
 }
 
 .weekly-summary,
@@ -650,6 +803,21 @@ td strong {
     position: static;
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .feedx-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .feedx-sidebar {
+    position: static;
   }
 }
 
