@@ -72,7 +72,7 @@ function renderSection(section) {
             (item) => `
               <article class="feedx-card">
                 <div class="event-top">
-                  <span class="stage-pill">${escapeHtml(item.label)}</span>
+                  <strong class="feedx-card-title">${escapeHtml(item.label)}</strong>
                   <span class="priority-pill ${priorityClass(item.priority)}">${escapeHtml(item.priority)}</span>
                 </div>
                 <p>${escapeHtml(item.text)}</p>
